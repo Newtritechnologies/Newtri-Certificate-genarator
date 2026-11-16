@@ -1,0 +1,248 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isSignedIn() {
+      return request.auth != null && request.auth.token.email_verified == true;
+    }
+
+    function isAdmin() {
+      return isSignedIn() && (
+        request.auth.token.email in ['vibishv66@gmail.com', 'newtritechnologies@gmail.com'] ||
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+      );
+    }
+
+    function isValidDateStr(s) {
+      return s is string && s.size() == 10 && s.matches('^\\d{4}-\\d{2}-\\d{2}$');
+    }
+
+    function isValidPublicCert(data, qrToken) {
+      return data.keys().hasAll([
+        'certificateId', 'qrToken', 'studentName', 'college', 'course',
+        'certType', 'duration', 'startDate', 'endDate', 'issueDate',
+        'status', 'approvalNote', 'scanCount', 'lastScanAt',
+        'createdBy', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'certificateId', 'qrToken', 'studentName', 'college', 'course',
+        'certType', 'duration', 'startDate', 'endDate', 'issueDate',
+        'status', 'approvalNote', 'scanCount', 'lastScanAt',
+        'createdBy', 'createdAt', 'updatedAt'
+      ])
+      && data.certificateId is string && data.certificateId.size() >= 6 && data.certificateId.size() <= 30 && data.certificateId.matches('^[A-Z0-9-]+$')
+      && data.qrToken is string && data.qrToken == qrToken && data.qrToken.size() >= 16 && data.qrToken.size() <= 64 && data.qrToken.matches('^[a-f0-9]+$')
+      && data.studentName is string && data.studentName.size() >= 1 && data.studentName.size() <= 120
+      && data.college is string && data.college.size() >= 1 && data.college.size() <= 160
+      && data.course is string && data.course.size() >= 1 && data.course.size() <= 160
+      && data.certType in ['Course', 'Value-added', 'Internship']
+      && data.duration is string && data.duration.size() <= 60
+      && isValidDateStr(data.startDate)
+      && isValidDateStr(data.endDate)
+      && isValidDateStr(data.issueDate)
+      && data.status in ['pending', 'approved', 'revoked']
+      && data.approvalNote is string && data.approvalNote.size() <= 120
+      && data.scanCount is number && data.scanCount >= 0
+      && data.lastScanAt is string && data.lastScanAt.size() <= 40
+      && data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidCertIdIndex(data, certId) {
+      return data.keys().hasAll(['certificateId', 'qrToken', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+      && data.keys().hasOnly(['certificateId', 'qrToken', 'status', 'createdBy', 'createdAt', 'updatedAt'])
+      && data.certificateId is string && data.certificateId == certId && data.certificateId.size() >= 6 && data.certificateId.size() <= 30 && data.certificateId.matches('^[A-Z0-9-]+$')
+      && data.qrToken is string && data.qrToken.size() >= 16 && data.qrToken.size() <= 64 && data.qrToken.matches('^[a-f0-9]+$')
+      && data.status in ['pending', 'approved', 'revoked']
+      && data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidStudentContact(data, certId) {
+      return data.keys().hasAll([
+        'certificateId', 'qrToken', 'phone', 'email',
+        'emailSentAt', 'waSentAt', 'sendError',
+        'createdBy', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'certificateId', 'qrToken', 'phone', 'email',
+        'emailSentAt', 'waSentAt', 'sendError',
+        'createdBy', 'createdAt', 'updatedAt'
+      ])
+      && data.certificateId is string && data.certificateId == certId && data.certificateId.size() >= 6 && data.certificateId.size() <= 30 && data.certificateId.matches('^[A-Z0-9-]+$')
+      && data.qrToken is string && data.qrToken.size() >= 16 && data.qrToken.size() <= 64 && data.qrToken.matches('^[a-f0-9]+$')
+      && data.phone is string && data.phone.size() <= 20
+      && data.email is string && data.email.size() <= 160
+      && data.emailSentAt is string && data.emailSentAt.size() <= 40
+      && data.waSentAt is string && data.waSentAt.size() <= 40
+      && data.sendError is string && data.sendError.size() <= 240
+      && data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidExpense(data) {
+      return data.keys().hasAll([
+        'spentOn', 'category', 'description', 'payee', 'method',
+        'amount', 'voidedAt', 'createdBy', 'createdAt', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'spentOn', 'category', 'description', 'payee', 'method',
+        'amount', 'voidedAt', 'createdBy', 'createdAt', 'updatedAt'
+      ])
+      && isValidDateStr(data.spentOn)
+      && data.category is string && data.category.size() >= 1 && data.category.size() <= 40
+      && data.description is string && data.description.size() >= 1 && data.description.size() <= 120
+      && data.payee is string && data.payee.size() <= 80
+      && data.method in ['Cash', 'UPI', 'Bank', 'Card']
+      && data.amount is number && data.amount > 0 && data.amount <= 99999999.99
+      && data.voidedAt is string && data.voidedAt.size() <= 40
+      && data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128
+      && data.createdAt is timestamp
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidSettings(data) {
+      return data.keys().hasAll([
+        'companyName', 'websiteUrl', 'publicBaseUrl', 'whatsappGroupInvite', 'updatedBy', 'updatedAt'
+      ]) && data.keys().hasOnly([
+        'companyName', 'websiteUrl', 'publicBaseUrl', 'whatsappGroupInvite', 'updatedBy', 'updatedAt'
+      ])
+      && data.companyName is string && data.companyName.size() >= 1 && data.companyName.size() <= 80
+      && data.websiteUrl is string && data.websiteUrl.size() >= 1 && data.websiteUrl.size() <= 160
+      && data.publicBaseUrl is string && data.publicBaseUrl.size() <= 200
+      && data.whatsappGroupInvite is string && data.whatsappGroupInvite.size() <= 200
+      && data.updatedBy is string && data.updatedBy.size() >= 1 && data.updatedBy.size() <= 128
+      && data.updatedAt is timestamp;
+    }
+
+    function isValidAdminUser(data) {
+      return data.keys().hasAll(['email', 'name', 'createdBy', 'createdAt'])
+      && data.keys().hasOnly(['email', 'name', 'createdBy', 'createdAt'])
+      && data.email is string && data.email.size() >= 3 && data.email.size() <= 160
+      && data.name is string && data.name.size() >= 1 && data.name.size() <= 120
+      && data.createdBy is string && data.createdBy.size() >= 1 && data.createdBy.size() <= 128
+      && data.createdAt is timestamp;
+    }
+
+    match /public_certificates/{qrToken} {
+      allow get: if isValidId(qrToken);
+      allow list: if isAdmin();
+      allow create: if isAdmin()
+        && isValidId(qrToken)
+        && isValidPublicCert(incoming(), qrToken)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(qrToken)
+        && isValidPublicCert(incoming(), qrToken)
+        && incoming().certificateId == existing().certificateId
+        && incoming().qrToken == existing().qrToken
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(qrToken);
+    }
+
+    match /cert_id_index/{certificateId} {
+      allow get: if isValidId(certificateId);
+      allow list: if isAdmin();
+      allow create: if isAdmin()
+        && isValidId(certificateId)
+        && isValidCertIdIndex(incoming(), certificateId)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(certificateId)
+        && isValidCertIdIndex(incoming(), certificateId)
+        && incoming().certificateId == existing().certificateId
+        && incoming().qrToken == existing().qrToken
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time
+        && incoming().diff(existing()).affectedKeys().hasOnly(['status', 'updatedAt']);
+      allow delete: if isAdmin() && isValidId(certificateId);
+    }
+
+    match /student_contacts/{certificateId} {
+      allow get: if isAdmin() && isValidId(certificateId);
+      allow list: if isAdmin();
+      allow create: if isAdmin()
+        && isValidId(certificateId)
+        && isValidStudentContact(incoming(), certificateId)
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(certificateId)
+        && isValidStudentContact(incoming(), certificateId)
+        && incoming().certificateId == existing().certificateId
+        && incoming().qrToken == existing().qrToken
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(certificateId);
+    }
+
+    match /expenses/{expenseId} {
+      allow get: if isAdmin() && isValidId(expenseId);
+      allow list: if isAdmin();
+      allow create: if isAdmin()
+        && isValidId(expenseId)
+        && isValidExpense(incoming())
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time
+        && incoming().updatedAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(expenseId)
+        && isValidExpense(incoming())
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(expenseId);
+    }
+
+    match /settings/{settingId} {
+      allow get: if isValidId(settingId);
+      allow list: if isAdmin();
+      allow create, update: if isAdmin()
+        && isValidId(settingId)
+        && isValidSettings(incoming())
+        && incoming().updatedBy == request.auth.uid
+        && incoming().updatedAt == request.time;
+      allow delete: if isAdmin() && isValidId(settingId);
+    }
+
+    match /admins/{uid} {
+      allow get: if isSignedIn() && request.auth.uid == uid;
+      allow list: if isAdmin();
+      allow create: if isAdmin()
+        && isValidId(uid)
+        && isValidAdminUser(incoming())
+        && incoming().createdBy == request.auth.uid
+        && incoming().createdAt == request.time;
+      allow update: if isAdmin()
+        && isValidId(uid)
+        && isValidAdminUser(incoming())
+        && incoming().createdBy == existing().createdBy
+        && incoming().createdAt == existing().createdAt;
+      allow delete: if isAdmin() && isValidId(uid);
+    }
+  }
+}

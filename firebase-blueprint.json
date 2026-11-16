@@ -1,0 +1,345 @@
+{
+  "entities": {
+    "PublicCertificate": {
+      "title": "PublicCertificate",
+      "description": "Publicly verifiable certificate record without PII, keyed by cryptographic qrToken.",
+      "type": "object",
+      "properties": {
+        "certificateId": {
+          "type": "string",
+          "maxLength": 30,
+          "pattern": "^[A-Z0-9-]{6,30}$"
+        },
+        "qrToken": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{16,64}$"
+        },
+        "studentName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "college": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "course": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "certType": {
+          "type": "string",
+          "enum": ["Course", "Value-added", "Internship"]
+        },
+        "duration": {
+          "type": "string",
+          "maxLength": 60
+        },
+        "startDate": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "endDate": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "issueDate": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "revoked"]
+        },
+        "approvalNote": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "scanCount": {
+          "type": "number"
+        },
+        "lastScanAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "certificateId",
+        "qrToken",
+        "studentName",
+        "college",
+        "course",
+        "certType",
+        "duration",
+        "startDate",
+        "endDate",
+        "issueDate",
+        "status",
+        "approvalNote",
+        "scanCount",
+        "lastScanAt",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "CertificateIdIndex": {
+      "title": "CertificateIdIndex",
+      "description": "Lookup index mapping human-readable Certificate ID to its qrToken without exposing list queries.",
+      "type": "object",
+      "properties": {
+        "certificateId": {
+          "type": "string",
+          "maxLength": 30,
+          "pattern": "^[A-Z0-9-]{6,30}$"
+        },
+        "qrToken": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{16,64}$"
+        },
+        "status": {
+          "type": "string",
+          "enum": ["pending", "approved", "revoked"]
+        },
+        "createdBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["certificateId", "qrToken", "status", "createdBy", "createdAt", "updatedAt"]
+    },
+    "StudentContact": {
+      "title": "StudentContact",
+      "description": "Isolated PII and delivery tracking record accessible strictly to verified admins.",
+      "type": "object",
+      "properties": {
+        "certificateId": {
+          "type": "string",
+          "maxLength": 30,
+          "pattern": "^[A-Z0-9-]{6,30}$"
+        },
+        "qrToken": {
+          "type": "string",
+          "maxLength": 64,
+          "pattern": "^[a-f0-9]{16,64}$"
+        },
+        "phone": {
+          "type": "string",
+          "maxLength": 20
+        },
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "emailSentAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "waSentAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "sendError": {
+          "type": "string",
+          "maxLength": 240
+        },
+        "createdBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "certificateId",
+        "qrToken",
+        "phone",
+        "email",
+        "emailSentAt",
+        "waSentAt",
+        "sendError",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Expense": {
+      "title": "Expense",
+      "description": "Operational expense ledger entry for NEWTRI Technologies admin reference.",
+      "type": "object",
+      "properties": {
+        "spentOn": {
+          "type": "string",
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "category": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "payee": {
+          "type": "string",
+          "maxLength": 80
+        },
+        "method": {
+          "type": "string",
+          "enum": ["Cash", "UPI", "Bank", "Card"]
+        },
+        "amount": {
+          "type": "number"
+        },
+        "voidedAt": {
+          "type": "string",
+          "maxLength": 40
+        },
+        "createdBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "spentOn",
+        "category",
+        "description",
+        "payee",
+        "method",
+        "amount",
+        "voidedAt",
+        "createdBy",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "PortalSettings": {
+      "title": "PortalSettings",
+      "description": "Public non-secret branding and base URL configuration for certificate links.",
+      "type": "object",
+      "properties": {
+        "companyName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "websiteUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "publicBaseUrl": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "whatsappGroupInvite": {
+          "type": "string",
+          "maxLength": 200
+        },
+        "updatedBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["companyName", "websiteUrl", "publicBaseUrl", "whatsappGroupInvite", "updatedBy", "updatedAt"]
+    },
+    "AdminUser": {
+      "title": "AdminUser",
+      "description": "Authorized admin account entry.",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "createdBy": {
+          "type": "string",
+          "maxLength": 128
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["email", "name", "createdBy", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/public_certificates/{qrToken}": {
+      "schema": { "$ref": "#/entities/PublicCertificate" },
+      "description": "Public verification records keyed by qrToken (no PII)."
+    },
+    "/cert_id_index/{certificateId}": {
+      "schema": { "$ref": "#/entities/CertificateIdIndex" },
+      "description": "Exact-ID verification lookup index mapping certificateId to qrToken."
+    },
+    "/student_contacts/{certificateId}": {
+      "schema": { "$ref": "#/entities/StudentContact" },
+      "description": "Admin-only PII and delivery logs."
+    },
+    "/expenses/{expenseId}": {
+      "schema": { "$ref": "#/entities/Expense" },
+      "description": "Admin-only operational expenses."
+    },
+    "/settings/{settingId}": {
+      "schema": { "$ref": "#/entities/PortalSettings" },
+      "description": "Portal branding and public link configuration."
+    },
+    "/admins/{uid}": {
+      "schema": { "$ref": "#/entities/AdminUser" },
+      "description": "Explicitly authorized admin users."
+    }
+  }
+}

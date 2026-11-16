@@ -1,0 +1,6 @@
+{
+  "name": "NEWTRI Certificates",
+  "description": "Cloud-hosted certificate issuance, WhatsApp & email distribution, and QR verification portal for NEWTRI Technologies.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
